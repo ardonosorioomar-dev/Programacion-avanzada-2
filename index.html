@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CRUD de Alumnos con Java y JDBC</title>
+<style>
+:root {
+  --bg: #f2f5f9;
+  --surface: #ffffff;
+  --ink: #14202e;
+  --muted: #4d5b6b;
+  --line: #d5dde7;
+  --accent: #1d5fbf;
+  --accent-ink: #ffffff;
+  --term-bg: #0f1826;
+  --term-ink: #d6e2f3;
+  --term-dim: #7f93ad;
+  --term-hot: #f2b84b;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d131b;
+    --surface: #141c27;
+    --ink: #e6edf5;
+    --muted: #9bacbf;
+    --line: #263345;
+    --accent: #6ea6f2;
+    --accent-ink: #0d131b;
+    --term-bg: #080d14;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.6;
+}
+.wrap { max-width: 920px; margin: 0 auto; padding: 0 20px; }
+header { padding: 56px 0 28px; }
+header p.course { margin: 0 0 8px; color: var(--muted); font-size: 0.95rem; }
+h1 { font-size: clamp(2rem, 5vw, 3rem); line-height: 1.1; margin: 0 0 14px; letter-spacing: -0.02em; }
+header p.lead { margin: 0; max-width: 60ch; font-size: 1.1rem; color: var(--muted); }
+.mono, pre, code { font-family: "Cascadia Mono", "SF Mono", Consolas, "Liberation Mono", monospace; }
+
+.term {
+  background: var(--term-bg);
+  color: var(--term-ink);
+  border-radius: 10px;
+  margin: 28px 0 8px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+.term-bar { padding: 8px 14px; font-size: 0.8rem; color: var(--term-dim); border-bottom: 1px solid rgba(255,255,255,0.08); }
+.term pre { margin: 0; padding: 16px 18px 20px; overflow-x: auto; font-size: 0.9rem; line-height: 1.55; }
+.term .hot { color: var(--term-hot); }
+.term .dim { color: var(--term-dim); }
+.caption { font-size: 0.85rem; color: var(--muted); margin: 0 0 8px; }
+
+section { padding: 34px 0 6px; }
+h2 { font-size: 1.45rem; margin: 0 0 14px; letter-spacing: -0.01em; }
+p { margin: 0 0 12px; max-width: 70ch; }
+
+.ops { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 8px; }
+.op { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
+.op h3 { margin: 0 0 4px; font-size: 1rem; }
+.op .sql { font-size: 0.8rem; color: var(--accent); margin: 0 0 6px; }
+.op p { font-size: 0.92rem; color: var(--muted); margin: 0; }
+
+table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--line); font-size: 0.95rem; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+tr:last-child td { border-bottom: 0; }
+.tablewrap { overflow-x: auto; }
+
+pre.code { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; overflow-x: auto; font-size: 0.88rem; margin: 0 0 12px; }
+ol { padding-left: 1.3rem; max-width: 70ch; }
+li { margin-bottom: 8px; }
+code { background: color-mix(in srgb, var(--accent) 10%, transparent); padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+pre code { background: none; padding: 0; }
+
+.repo { display: inline-block; background: var(--accent); color: var(--accent-ink); padding: 11px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 4px; }
+.repo:hover { filter: brightness(1.08); }
+a:focus-visible, .repo:focus-visible { outline: 3px solid var(--term-hot); outline-offset: 3px; }
+a { color: var(--accent); }
+
+footer { margin-top: 44px; padding: 22px 0 48px; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.92rem; }
+footer p { margin: 0 0 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="course">Programación Avanzada 2, primer parcial</p>
+  <h1>CRUD de Alumnos con Java y JDBC</h1>
+  <p class="lead">Aplicación de consola en Java que guarda, consulta, actualiza y elimina alumnos en una base de datos SQL Server.</p>
+
+  <div class="term" role="img" aria-label="Ejemplo de la salida del programa en la consola">
+    <div class="term-bar">Consola, ejemplo de salida</div>
+<pre><span class="dim">-&gt; Conexión Exitosa a SQL</span>
+
+=== MENU  ===
+1. Ingresar Nuevo
+2. Todos los Alumnos
+3. Actualizar Registro
+4. Eliminar
+5. Salir
+Seleccione una opción: <span class="hot">2</span>
+
+=====================================================
+ID  | Nombre           | Correo
+=====================================================
+<span class="dim">1    | Ana Pérez        | ana@ejemplo.com
+2    | Luis Gómez       | luis@ejemplo.com</span>
+=====================================================</pre>
+  </div>
+  <p class="caption">Esta página presenta el proyecto. El programa se ejecuta en la consola de Java, no en el navegador.</p>
+</header>
+
+<section id="que-hace">
+  <h2>Qué hace el programa</h2>
+  <p>Muestra un menú y repite las opciones hasta que la persona elige salir. Cada opción trabaja sobre la tabla <code>Alumnos</code> con consultas preparadas (<code>PreparedStatement</code>).</p>
+  <div class="ops">
+    <div class="op"><h3>Ingresar nuevo</h3><p class="sql mono">INSERT</p><p>Pide el nombre y el correo y guarda el alumno.</p></div>
+    <div class="op"><h3>Todos los alumnos</h3><p class="sql mono">SELECT</p><p>Lista el ID, el nombre y el correo de cada alumno.</p></div>
+    <div class="op"><h3>Actualizar registro</h3><p class="sql mono">UPDATE</p><p>Cambia el nombre, el correo o ambos. Si se deja vacío, conserva el valor actual.</p></div>
+    <div class="op"><h3>Eliminar</h3><p class="sql mono">DELETE</p><p>Borra un alumno a partir de su ID.</p></div>
+  </div>
+</section>
+
+<section id="archivos">
+  <h2>Archivos del repositorio</h2>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Archivo</th><th>Para qué sirve</th></tr></thead>
+    <tbody>
+      <tr><td><code>Hola_Mundo.java</code></td><td>Menú principal y las cuatro operaciones del CRUD.</td></tr>
+      <tr><td><code>ConnectionDB.java</code></td><td>Conexión a SQL Server con el driver mssql-jdbc. La contraseña no está en el código.</td></tr>
+      <tr><td><code>script_alumnos.sql</code></td><td>Crea la base de datos <code>AvanzadaII</code> y la tabla <code>Alumnos</code>.</td></tr>
+      <tr><td><code>README.md</code></td><td>Descripción del proyecto e instrucciones para ejecutarlo.</td></tr>
+      <tr><td><code>.gitignore</code></td><td>Evita subir archivos compilados y de configuración del editor.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="base-de-datos">
+  <h2>Base de datos</h2>
+  <p>El programa usa la base <code>AvanzadaII</code> en SQL Server, con esta tabla:</p>
+<pre class="code"><code>CREATE TABLE Alumnos (
+    id     INT IDENTITY(1,1) PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    correo VARCHAR(150) NOT NULL
+);</code></pre>
+</section>
+
+<section id="ejecutar">
+  <h2>Cómo ejecutarlo</h2>
+  <ol>
+    <li>Ejecuta <code>script_alumnos.sql</code> en SQL Server.</li>
+    <li>Agrega el driver <code>mssql-jdbc</code> al proyecto.</li>
+    <li>Define la contraseña de tu usuario de SQL Server con la variable de entorno <code>DB_PASS</code> o con la opción de la JVM <code>-DDB_PASS=tu_contraseña</code>.</li>
+    <li>Ejecuta la clase <code>org.example.Hola_Mundo</code>.</li>
+  </ol>
+</section>
+
+<section id="codigo">
+  <h2>Código fuente</h2>
+  <p>El código completo está en GitHub.</p>
+  <a class="repo" href="https://github.com/ardonosorioomar-dev/Programacion-avanzada-2">Ver el repositorio en GitHub</a>
+</section>
+
+<footer>
+  <p><strong>Omar Emilio Ardon Osorio</strong></p>
+  <p>Programación Avanzada 2</p>
+  <p>Docente: Kevin Alexander Maradiaga Sarmiento</p>
+</footer>
+
+</div>
+</body>
+</html>
